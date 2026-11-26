@@ -1,21 +1,18 @@
-"""
-Cost guard (tiêu chí 8).
+from datetime import datetime, timezone
+from fastapi import HTTPException
+from .config import settings
+from .redis_client import r
 
-Yêu cầu:
-  • Cộng dồn chi phí LLM (tính theo token) vào Redis
-  • Tổng chi phí vượt DAILY_BUDGET_USD (hoặc MONTHLY_BUDGET_USD) → HTTP 402
-"""
-
-# Giá USD / 1K tokens (tham khảo gpt-4o-mini)
-PRICE_INPUT_PER_1K = 0.00015
-PRICE_OUTPUT_PER_1K = 0.0006
-
+def daily_key() -> str:
+    return "cost:" + datetime.now(timezone.utc).date().isoformat()
 
 def check_budget() -> None:
-    """Gọi TRƯỚC khi gọi LLM. Hết budget → raise HTTPException(status_code=402)."""
-    raise NotImplementedError("TODO: check_budget")
-
+    if float(r.get(daily_key()) or 0) >= settings.daily_budget_usd:
+        raise HTTPException(402, "Daily budget exhausted")
 
 def record_cost(input_tokens: int, output_tokens: int) -> float:
-    """Gọi SAU khi gọi LLM. Cộng chi phí của request vào tổng, trả về chi phí request."""
-    raise NotImplementedError("TODO: record_cost")
+    cost = (input_tokens * 0.00015 + output_tokens * 0.0006) / 1000
+    key = daily_key()
+    with r.pipeline() as pipe:
+        pipe.incrbyfloat(key, cost).expire(key, 172800).execute()
+    return cost

@@ -45,7 +45,7 @@ V1 ít token hơn nhưng chỉ trả lời đúng một câu. V2 bổ sung ngữ
 
 ## 4. Quan sát hệ thống
 
-[Grafana khi đang có tải](screenshots/grafana-dashboard.png) hiển thị 51,3 request/giây, lỗi 0,89%, p95 1,01 giây và 37 request đang xử lý. Trong một cửa sổ đo khác với 3 replica, Prometheus trả trung bình 238 ms và p95 296 ms. Ba instance nhận 18,21, 18,48 và 18,34 request/giây. Trong lần đo này Nginx chia tải khá đều. Input gồm cả câu hỏi và ngữ cảnh retrieval, nên số token đầu vào thường lớn hơn phần trả lời. Nginx trả 404 cho `/metrics` trên cổng 8080. Prometheus scrape trực tiếp từng agent trong mạng Docker.
+[Grafana khi đang có tải](screenshots/grafana-dashboard.png) hiển thị 51,3 request/giây, lỗi 0,89%, p95 1,01 giây và 37 request đang xử lý. Trong một cửa sổ đo khác với 3 replica, Prometheus trả trung bình 238 ms và p95 296 ms. Ba instance nhận 18,21, 18,48 và 18,34 request/giây. Trong lần đo này Nginx chia tải khá đều. Input gồm cả câu hỏi và ngữ cảnh retrieval, nên số token đầu vào thường lớn hơn phần trả lời. Nginx trả 404 cho `/metrics` trên cổng 8080. Route này bị chặn ở cổng public vì số liệu có thể tiết lộ các route, lưu lượng và trạng thái của từng instance. Prometheus vẫn đọc được metrics trực tiếp từ từng agent qua mạng Docker nội bộ.
 
 ### Hai cảnh báo đồng thời
 
@@ -76,7 +76,7 @@ Locust headless, 100 user, tăng 10 user/giây, chạy 2 phút mỗi cấu hình
 | 1 | 54.19 | 220 | 1300 | 2100 | 56/7025 |
 | 3 | 60.36 | 190 | 270 | 1700 | 61/7821 |
 
-Ba replica giảm p95 từ 1.300 xuống 270 ms và tăng throughput khoảng 11,4%. p99 vẫn ở 1.700 ms ở cả hai lần đo. Thêm replica xử lý được nhiều request đồng thời hơn, còn độ trễ cuộc gọi model vẫn xuất hiện ở phần đuôi phân phối.
+Ba replica giảm p95 từ 1.300 xuống 270 ms và tăng throughput khoảng 11,4%. p99 cũng giảm từ 2.100 xuống 1.700 ms. Thêm replica xử lý được nhiều request đồng thời hơn, còn độ trễ cuộc gọi model vẫn xuất hiện ở phần đuôi phân phối.
 
 ## 6. Kết luận
 
